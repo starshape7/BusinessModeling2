@@ -45,8 +45,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/seoul-bus-crowd/*.json
-          git commit -m "chore(data): save V2X bus station crowd JSON [skip ci]" || exit 0
-          git push
+          echo "::add-mask::$API_KEY"
+          # url 전체도 마스킹하고 싶다면:
+          url="${BASE}?apiKey=${API_KEY}"
+          echo "::add-mask::${url}"
+          curl -sS "$url" -H "Accept: application/json" -o "$out"
+
