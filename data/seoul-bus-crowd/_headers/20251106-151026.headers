@@ -1,0 +1,7 @@
+HTTP/1.1 302 Found
+Date: Thu, 06 Nov 2025 06:10:27 GMT
+Connection: close
+Location: https://t-data.seoul.go.kr/apig/apiman-gateway/tapi/v2xBusStationCrowdedInformation/1.0?apikey=4792f185-494a-42d2-9e7e-de44422db215&type=json&pageNo=1&numOfRows=100
+Content-Type: text/html
+Content-Length: 140
+
