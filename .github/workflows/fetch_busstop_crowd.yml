@@ -2,11 +2,11 @@ name: Fetch Seoul V2X Bus Station Crowd JSON
 
 on:
   schedule:
-    - cron: "*/5 * * * *"   # 5분마다 (UTC)
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 permissions:
-  contents: write  # 커밋/푸시 필요
+  contents: write
 
 concurrency:
   group: fetch-seoul-bus-crowd
@@ -18,36 +18,84 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Call API and save JSON
+      - name: Call API and save ONLY matching cameraId
         env:
-          API_KEY: ${{ secrets.SEOUL_TDATA_API_KEY }}  # <- 여기에 네 키 저장
+          API_KEY: ${{ secrets.SEOUL_TDATA_API_KEY }}
           BASE: "http://t-data.seoul.go.kr/apig/apiman-gateway/tapi/v2xBusStationCrowdedInformation/1.0"
+          TYPE: "json"
+          PAGE_NO: "1"
+          ROWS: "100"
+          CAMERA_ID: "DLD1120008100"   # ← 여기만 바꾸면 다른 카메라로 필터 가능
         run: |
           set -e
-          mkdir -p data/seoul-bus-crowd
+          echo "::add-mask::$API_KEY"
+
+          mkdir -p data/seoul-bus-crowd data/seoul-bus-crowd/_headers data/seoul-bus-crowd/_errors
           export TZ=Asia/Seoul
           ts="$(date +'%Y%m%d-%H%M%S')"
-          out="data/seoul-bus-crowd/${ts}.json"
+          raw="data/seoul-bus-crowd/${ts}.raw.json"
+          headf="data/seoul-bus-crowd/_headers/${ts}.headers"
+          out="data/seoul-bus-crowd/${ts}.json"        # ← 최종(필터된) 결과만 이 이름으로 저장
+          errf="data/seoul-bus-crowd/_errors/${ts}.txt"
 
-          # 기본 호출 (파라미터가 더 있으면 &stationId=... 등 추가)
-          url="${BASE}?apiKey=${API_KEY}"
+          url="${BASE}?apikey=${API_KEY}&type=${TYPE}&pageNo=${PAGE_NO}&numOfRows=${ROWS}"
+          echo "::add-mask::${url}"
 
-          # 호출 -> 저장(네트워크/5xx 재시도)
-          curl -sS "$url" \
-            --retry 5 --retry-connrefused --retry-delay 2 --retry-max-time 60 \
-            -H "Accept: application/json" \
-            -o "$out"
+          # 호출 (실패해도 잡 중단 대신 상태코드로 분기)
+          set +e
+          http_code=$(curl -sS -H "Accept: application/json" -D "$headf" -o "$raw" "$url" -w "%{http_code}")
+          curl_ec=$?
+          set -e
+          echo "HTTP $http_code (curl exit=$curl_ec)"
 
-          # 보기 좋게 정렬 (jq 기본 탑재)
-          tmp="${out}.tmp" && jq . "$out" > "$tmp" && mv "$tmp" "$out"
+          # BOM 제거
+          [ -s "$raw" ] && sed -i '1s/^\xEF\xBB\xBF//' "$raw" || true
 
-      - name: Commit & push
+          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+            # 1) 우선 JSON 유효성 체크
+            if jq -e . "$raw" >/dev/null 2>&1; then
+              # 2) cameraId가 일치하는 모든 객체를 재귀 탐색으로 수집 → 배열로 저장
+              #    (응답이 어떤 중첩 구조여도 cameraId 필드가 있는 객체만 모음)
+              jq --arg cam "$CAMERA_ID" '[.. | objects | select(.cameraId? == $cam)]' "$raw" > "$out"
+
+              # 3) 매칭 없으면 커밋/푸시 생략(파일도 남기지 않음)
+              if jq -e 'length > 0' "$out" >/dev/null 2>&1; then
+                echo "Filtered $(jq -r 'length' "$out") item(s) for cameraId=$CAMERA_ID"
+              else
+                echo "No items matched cameraId=$CAMERA_ID. Skipping commit."
+                rm -f "$out"
+                # 원한다면 raw를 남기지 않도록 삭제
+                rm -f "$raw"
+                exit 0
+              fi
+            else
+              echo "Warning: 2xx지만 JSON 파싱 불가. 원문(raw)만 보관합니다."
+              mv "$raw" "$out"
+            fi
+          else
+            echo "Server error ($http_code). 에러 요약 저장."
+            {
+              echo "HTTP: $http_code"
+              echo "---- headers ----"
+              cat "$headf" 2>/dev/null || true
+              echo "---- first 400 bytes of body ----"
+              head -c 400 "$raw" | tr -d '\n' || true
+              echo
+            } > "$errf"
+            mv "$raw" "$out"
+          fi
+
+      - name: Commit & push (only if there is filtered file)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "::add-mask::$API_KEY"
-          # url 전체도 마스킹하고 싶다면:
-          url="${BASE}?apiKey=${API_KEY}"
-          echo "::add-mask::${url}"
-          curl -sS "$url" -H "Accept: application/json" -o "$out"
-
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # out 파일(필터된 결과)이 있는 경우에만 커밋
+          if ls data/seoul-bus-crowd/*.json >/dev/null 2>&1; then
+            git add data/seoul-bus-crowd/*.json data/seoul-bus-crowd/_headers/* data/seoul-bus-crowd/_errors/* 2>/dev/null || true
+            git commit -m "chore(data): save filtered(cameraId=$CAMERA_ID) V2X JSON [skip ci]" || exit 0
+            git push
+          else
+            echo "Nothing to commit."
+          fi
