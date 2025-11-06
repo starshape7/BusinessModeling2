@@ -21,7 +21,7 @@ jobs:
       - name: Call API and save ONLY matching cameraId
         env:
           API_KEY: ${{ secrets.SEOUL_TDATA_API_KEY }}
-          BASE: "http://t-data.seoul.go.kr/apig/apiman-gateway/tapi/v2xBusStationCrowdedInformation/1.0"
+          BASE: "https://t-data.seoul.go.kr/apig/apiman-gateway/tapi/v2xBusStationCrowdedInformation/1.0"
           TYPE: "json"
           PAGE_NO: "1"
           ROWS: "100"
