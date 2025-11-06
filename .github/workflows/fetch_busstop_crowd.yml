@@ -66,8 +66,14 @@ jobs:
                 def tolowerkeys:
                   walk(if type=="object" then with_entries(.key |= ascii_downcase) else . end);
                 tolowerkeys
-                | [.. | objects | select(.cameraid? == ($cam | ascii_downcase))]
+                | [.. | objects
+                    | select(
+                        (.cameraid?    == ($cam | ascii_downcase)) or
+                        (.camera_id?   == ($cam | ascii_downcase))
+                      )
+                  ]
               ' "$raw" > "$out"
+
 
               if jq -e 'length > 0' "$out" >/dev/null 2>&1; then
                 echo "Filtered $(jq -r 'length' "$out") item(s) for cameraId=$CAMERA_ID"
