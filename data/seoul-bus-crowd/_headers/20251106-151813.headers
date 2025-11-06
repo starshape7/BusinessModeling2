@@ -1,0 +1,19 @@
+HTTP/1.1 200 
+Transfer-Encoding: chunked
+Server: web server
+X-Content-Type-Options: nosniff
+X-RateLimit-Reset: 31305
+Pragma: no-cache
+Date: Thu, 06 Nov 2025 06:18:14 GMT
+X-Frame-Options: DENY
+X-RateLimit-Remaining: 978
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Set-Cookie: SCOUTER=x4jiebkuj1cb80; Expires=Tue, 24-Nov-2093 09:32:21 GMT; Path=/
+Vary: Access-Control-Request-Headers
+Vary: Access-Control-Request-Method
+Vary: Origin
+X-RateLimit-Limit: 1000
+Expires: 0
+X-XSS-Protection: 1; mode=block
+Content-Type: application/json
+
