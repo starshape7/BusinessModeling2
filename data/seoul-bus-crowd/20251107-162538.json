@@ -1,0 +1,19 @@
+[
+  {
+    "cameraId": "DLD1120013000",
+    "trsmUtcTime": 1762532707294,
+    "objId": "0000027909",
+    "trsmDy": 7,
+    "itisCd": "1545",
+    "trsmYear": "2025",
+    "trsmMt": "11",
+    "trsmTm": "162507",
+    "trsmMs": "294",
+    "detcLot": 126.9152388,
+    "detcLat": 37.5691337,
+    "linkId": "1120005700",
+    "sttnId": "13005",
+    "rgtrId": "v2x",
+    "regDt": "2025-11-07T07:25:07.000+00:00"
+  }
+]
