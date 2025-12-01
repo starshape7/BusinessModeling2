@@ -1,0 +1,36 @@
+[
+  {
+    "cameraId": "DLD1120013000",
+    "trsmUtcTime": 1764615122007,
+    "objId": "0000011043",
+    "trsmDy": 1,
+    "itisCd": "1545",
+    "trsmYear": "2025",
+    "trsmMt": "12",
+    "trsmTm": "185202",
+    "trsmMs": "007",
+    "detcLot": 126.9152388,
+    "detcLat": 37.5691337,
+    "linkId": "1120005700",
+    "sttnId": "13005",
+    "rgtrId": "v2x",
+    "regDt": "2025-12-01T09:52:02.000+00:00"
+  },
+  {
+    "cameraId": "DLD1120013000",
+    "trsmUtcTime": 1764615120006,
+    "objId": "0000011043",
+    "trsmDy": 1,
+    "itisCd": "1545",
+    "trsmYear": "2025",
+    "trsmMt": "12",
+    "trsmTm": "185200",
+    "trsmMs": "006",
+    "detcLot": 126.9152388,
+    "detcLat": 37.5691337,
+    "linkId": "1120005700",
+    "sttnId": "13005",
+    "rgtrId": "v2x",
+    "regDt": "2025-12-01T09:52:00.000+00:00"
+  }
+]
